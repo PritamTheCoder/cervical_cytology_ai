@@ -1,0 +1,38 @@
+# Pipeline Configuration
+# All paths and parameters for reproducible execution
+
+dataset:
+  root: "/path/to/sipakmed"  # Placeholder - override at runtime
+  classes:
+    - "im_Dyskeratotic"
+    - "im_Koilocytotic"
+    - "im_Metaplastic"
+    - "im_Parabasal"
+    - "im_Superficial_Intermediate"
+  splits:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+
+preprocessing:
+  target_size: [224, 224]
+  normalize_mean: [0.485, 0.456, 0.406]
+  normalize_std: [0.229, 0.224, 0.225]
+  interpolation: "bilinear"
+  seed: 42
+
+augmentation:
+  enabled: false  # OFF by default for reproducibility
+  rotation_range: 15
+  flip_horizontal: true
+  flip_vertical: false
+
+pipeline:
+  stages:
+    - "data_ingestion"
+    - "preprocessing_validation"
+  output_dir: "./outputs"
+  log_level: "INFO"
+  dry_run: false
+
+random_seed: 42

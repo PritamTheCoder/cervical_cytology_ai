@@ -1,0 +1,14 @@
+# Core numerical and image libraries
+numpy
+Pillow
+# YAML config
+PyYAML
+# Deep learning
+torch
+torchvision
+# Visualization
+matplotlib
+# Typing helpers (compat)
+typing-extensions
+# Vision
+opencv-python
