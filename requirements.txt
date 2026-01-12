@@ -6,9 +6,17 @@ PyYAML
 # Deep learning
 torch
 torchvision
+timm
+# opencv
+opencv-python
 # Visualization
 matplotlib
+tqdm
+# Augmentations
+albumentations
 # Typing helpers (compat)
 typing-extensions
 # Vision
 opencv-python
+# ML
+scikit-learn
