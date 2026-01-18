@@ -49,7 +49,7 @@ Target model performance: **≥ 92% accuracy** with strong recall for abnormal c
 
 ### 3️⃣ Cell Segmentation
 Uses:
-- **CellPose** or **CellSAM**
+- **Cellpose** (cyto2)
 
 Outputs:
 - cell masks
