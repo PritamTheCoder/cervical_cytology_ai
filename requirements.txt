@@ -20,3 +20,5 @@ typing-extensions
 opencv-python
 # ML
 scikit-learn
+# segmentation
+cellpose==3.0.0

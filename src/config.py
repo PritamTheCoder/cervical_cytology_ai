@@ -69,11 +69,31 @@ class Phase2Config(Phase1Config):
         self.weights_path.parent.mkdir(parents=True, exist_ok=True)
 
 
+@dataclass
+class SegmentationConfig:
+    # Paths
+    INPUT_DIR: Path = Path("data/Test_APC")
+    OUTPUT_DIR: Path = Path("data/segmented")
+    
+    # Cellpose Settings
+    MODEL_TYPE: str = "cyto2"
+    DIAMETER: int = 150     # approximate diameter of cells in pixels (Needs Tuning) 
+    FLOW_THRESHOLD: float = 0.6     # Strictness of shape ( lower = more strict)
+    CELLPROB_THRESHOLD: float = -2.0         # Threshold for cell probability
+    
+    # Cropping Settings
+    CROP_PADDING: int = 10
+    MIN_AREA: int = 50
+    
+    # Hardware
+    USE_GPU: bool = False
+    
 # --- EXPORTS ---
 
-# 1. Instantiate both specifically
+# 1. Instantiate specifically
 phase1_instance = Phase1Config()
 phase2_instance = Phase2Config()
+segmentation_config = SegmentationConfig()
 
 # 2. Global Registry (Optional, useful for automated testing loops)
 configs: Dict[str, Phase1Config] = {
