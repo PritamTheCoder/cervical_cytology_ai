@@ -82,8 +82,8 @@ class SegmentationConfig:
     CELLPROB_THRESHOLD: float = -2.0         # Threshold for cell probability
     
     # Cropping Settings
-    CROP_PADDING: int = 10
-    MIN_AREA: int = 50
+    CROP_PADDING: int = 15
+    MIN_AREA: int = 40
     
     # Hardware
     USE_GPU: bool = False
