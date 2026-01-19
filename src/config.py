@@ -88,12 +88,33 @@ class SegmentationConfig:
     # Hardware
     USE_GPU: bool = False
     
+# --- Cell-Centric Inference ---
+@dataclass
+class CellConfig(Phase2Config):
+    """
+    Configuration for Phase 4: Integrating Segmentation + Classification.
+    Reads crops from segmentation output, runs Inference, saves enriched Metadata.
+    """
+    # Inputs
+    INPUT_METADATA_DIR: Path = Path("data/segmented/metadata")
+    INPUT_CROPS_DIR: Path = Path("data/segmented/crops")
+    
+    # Outputs
+    OUTPUT_DIR: Path = Path("data/predictions")
+    
+    # Inference threshold (optional filter)
+    CONFIDENCE_THRESHOLD: float = 0.5
+    
+    def __post_init__(self):
+        self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        
 # --- EXPORTS ---
 
 # 1. Instantiate specifically
 phase1_instance = Phase1Config()
 phase2_instance = Phase2Config()
 segmentation_config = SegmentationConfig()
+cell_config = CellConfig()
 
 # 2. Global Registry (Optional, useful for automated testing loops)
 configs: Dict[str, Phase1Config] = {
