@@ -65,10 +65,20 @@ class SegmentationEngine:
         )
         
         # Extract Metadata & Crops
+        if isinstance(masks, list):
+            masks = masks[0]
+            
         cell_count = masks.max()
         if cell_count == 0:
             logging.warning(f"No cells detected in {img_path.name}")
             return
+        
+        # Save full mask array
+        np.save(self.dirs["masks"] / f"{img_path.stem}_mask.npy", masks)
+        
+        # Option B: Save as .png (Visual, but be careful with scaling if >255 cells)
+        # valid_mask = masks.astype(np.uint16) # use uint16 to support up to 65535 cells
+        # cv2.imwrite(str(self.dirs["masks"] / f"{img_path.stem}_mask.png"), valid_mask)
         
         image_meta = {
             "filename": img_path.name,
