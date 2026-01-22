@@ -1,5 +1,7 @@
 # Cervical Cytology AI — End-to-End Clinical Workflow Simulation (PoC)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This project builds an end-to-end AI system that simulates a **real clinical cervical cytology analysis workflow**.  
 It ingests cytology microscope images, segments individual cells, classifies cell types, aggregates findings, and produces structured reports — similar to what an AI-assisted digital pathology system would do in practice.
 
@@ -193,6 +195,12 @@ It is NOT approved for clinical use, diagnosis, or patient care.
 
 ---
 
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get started.
+
+---
+
 ## 🙌 Author
 
 Developed as part of advanced medical AI research and engineering practice.
@@ -201,4 +209,4 @@ Developed as part of advanced medical AI research and engineering practice.
 
 ## 📜 License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
