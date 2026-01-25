@@ -1,7 +1,8 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Tuple, Dict
+from typing import Optional
 
 # --- Phase 1: Data & Contracts ---
 @dataclass
@@ -83,7 +84,7 @@ class SegmentationConfig:
     
     # Cropping Settings
     CROP_PADDING: int = 15
-    MIN_AREA: int = 40
+    MIN_AREA: int = 50
     
     # Hardware
     USE_GPU: bool = False
@@ -107,7 +108,85 @@ class CellConfig(Phase2Config):
     
     def __post_init__(self):
         self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        
+    
+# --- REPORTING CONTRACTS (SCHEMAS) ---
+@dataclass
+class CellEvidence:
+    """Represents a single interesting cell to be visualized in the PDF."""
+    cell_id:str
+    cell_class: str
+    confidence: float
+    bbox: list[int]
+    heatmap_path: Optional[str] = None # For XAI
+
+@dataclass
+class ClinicalSummary:
+    """Hight-level diagnosis summary."""
+    slide_id: str
+    timestamp: str
+    risk_flag: str 
+    primary_finding: str
+    cellularity: str
+    abnormal_ratio: float
+    logic_mode: str
+    
+@dataclass
+class SlideReport:
+    """Root object for PDF report generation."""
+    summary: ClinicalSummary
+    
+    # Detailed counts for tables
+    class_counts: Dict[str, int]
+    clinical_group_counts: Dict[str, int]   # BENIGN, ABNORMAL
+    
+    # The 'Evidence' - Top N abnormal cells for visual grid
+    top_abnormal_cells: list[CellEvidence] = field(default_factory=list)
+
+
+# --- Phase 6 CONFIGURATION ---
+
+@dataclass
+class ReportConfig:
+    """
+    Configuration for Aggregation and PDF Reporting.
+    """
+    # --- Paths ---
+    # Input : Per cell JSON result
+    INPUT_PREDICTIONS_DIR: Path = Path("data/predictions")
+
+    # Output: Final JSON and PDFs reports location
+    OUTPUT_JSON_DIR: Path = Path("data/reports/json")
+    OUTPUT_PDF_DIR: Path = Path("data/reports/pdf")
+
+    # --- Aggregation logic ---
+    # Cell conf: Below this is treated as "Uncertain/Benign" to reduce noise
+    AGGREGATION_CONFIDENCE_THRESHOLD: float = 0.75
+    
+    # If abnormal_ratio > 0.15, flag as HIGH RISK
+    HIGH_RISK_RATIO: float = 0.15
+    
+    # Mapping for aggregation buckets
+    CLINICAL_MAPPING: Dict[str, str] = field(default_factory=lambda: {
+        "im_Superficial_Intermediate": "BENIGN",
+        "im_Parabasal": "BENIGN",
+        "im_Metaplastic": "BENIGN",
+        "im_Dyskeratotic": "ABNORMAL",
+        "im_Koilocytotic": "ABNORMAL",
+        "background": "IGNORE"
+    })
+    
+    # --- PDF Visuals ---
+    REPORT_TITLE: str = "Automated Cytology Analysis Report"
+    INSTITUTION_NAME: str = "Medical AI Lab"
+    
+    # Evidence Gallery
+    MAX_EVIDENCE_CELLS: int = 12
+    GRID_COLUMNS: int = 4
+    
+    def __post_init__(self):
+        self.OUTPUT_JSON_DIR.mkdir(parents=True, exist_ok=True)
+        self.OUTPUT_PDF_DIR.mkdir(parents=True, exist_ok=True)
+    
 # --- EXPORTS ---
 
 # 1. Instantiate specifically
@@ -115,11 +194,15 @@ phase1_instance = Phase1Config()
 phase2_instance = Phase2Config()
 segmentation_config = SegmentationConfig()
 cell_config = CellConfig()
+report_config = ReportConfig()
 
 # 2. Global Registry (Optional, useful for automated testing loops)
-configs: Dict[str, Phase1Config] = {
+configs = {
     "phase1": phase1_instance,
-    "phase2": phase2_instance
+    "phase2": phase2_instance,
+    "segmentation": segmentation_config,
+    "cell": cell_config,
+    "report": report_config,
 }
 
 # 3. Default "CONFIG"
