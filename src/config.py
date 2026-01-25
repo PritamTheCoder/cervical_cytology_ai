@@ -176,8 +176,8 @@ class ReportConfig:
     })
     
     # --- PDF Visuals ---
-    REPORT_TITLE: str = "Automated Cytology Analysis Report"
-    INSTITUTION_NAME: str = "Medical AI Lab"
+    REPORT_TITLE: str = "AI-Assisted Cervical Cancer Cytology Analysis Report"
+    INSTITUTION_NAME: str = "Cytology-AI Lab"
     
     # Evidence Gallery
     MAX_EVIDENCE_CELLS: int = 12

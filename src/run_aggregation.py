@@ -20,72 +20,72 @@ logger = logging.getLogger("PipelineRunner")
 
 def run_batch_aggregation():
     """
-    Orchestrates the aggregation of all slide predictions found in the input directory.
+    Consolidates all cell predictions from multiple JSON frames into a 
+    single master list and performs a global slide-level analysis.
     """
-    # Setup Paths from Config
     input_dir = report_config.INPUT_PREDICTIONS_DIR
     output_json_dir = report_config.OUTPUT_JSON_DIR
     
-    logger.info(f"Starting Batch Aggregation...")
-    logger.info(f"Reading from: {input_dir.resolve()}")
-    logger.info(f"Writing to:   {output_json_dir.resolve()}")
-
-    # Initialize Logic
-    aggregator = ClinicalAggregator(config=report_config)
-
-    # Find all prediction files
-    # Assuming filenames are like "SLIDE_123.json"
-    slide_files = list(input_dir.glob("*.json"))
+    # Use the folder name as the Slide ID 
+    slide_id = input_dir.name
     
-    if not slide_files:
-        logger.error(f"No JSON files found in {input_dir}!")
+    logger.info(f"Starting Global Aggregation for slide: {slide_id}")
+    logger.info(f"Reading frames from: {input_dir.resolve()}")
+
+    aggregator = ClinicalAggregator(config=report_config)
+    frame_files = list(input_dir.glob("*.json"))
+    
+    if not frame_files:
+        logger.error(f"No JSON frames found in {input_dir}!")
         return
 
-    logger.info(f"Found {len(slide_files)} slides to process.")
+    all_detected_cells = []
+    frames_successfully_read = 0
 
-    # Process Loop
-    success_count = 0
-    
-    for json_file in tqdm(slide_files, desc="Aggregating Slides"):
-        slide_id = json_file.stem  # extract "SLIDE_123" from filename
-        
+    # Batch Collection
+    for json_file in tqdm(frame_files, desc="Consolidating Frames"):
         try:
-            # Load Raw Predictions
             with open(json_file, 'r') as f:
-                predictions = json.load(f)
+                data = json.load(f)
 
-            # Validation: Handle dictionary wrappers
-            if isinstance(predictions, dict):
-                if "processed_cells" in predictions:
-                    predictions = predictions["processed_cells"]
-                elif "predictions" in predictions:
-                    predictions = predictions["predictions"]
-                else:
-                    logger.warning(f"Skipping {slide_id}: JSON is a dict but missing 'processed_cells' key.")
-                    continue
-                
-            # Final check to ensure we have a list before processing
-            if not isinstance(predictions, list):
-                logger.warning(f"Skipping {slide_id}: JSON format incorrect (expected list).")
+            # Extract the cell list using the 'processed_cells' key
+            frame_cells = []
+            if isinstance(data, dict) and "processed_cells" in data:
+                frame_cells = data["processed_cells"]
+            elif isinstance(data, list):
+                frame_cells = data
+            else:
+                logger.warning(f"Skipping {json_file.name}: Unknown JSON structure.")
                 continue
 
-            # Run Adaptive Logic
-            report: SlideReport = aggregator.analyze_slide(slide_id, predictions)
-
-            # Save Result
-            out_path = output_json_dir / f"{slide_id}_report.json"
-            aggregator.save_for_pdf(report, str(out_path))
-            
-            # Log High Risk cases immediately for audit
-            if report.summary.risk_flag == "HIGH_RISK":
-                logger.info(f"ALERT: {slide_id} flagged as HIGH_RISK ({report.summary.abnormal_ratio:.2%})")
-            
-            success_count += 1
+            all_detected_cells.extend(frame_cells)
+            frames_successfully_read += 1
 
         except Exception as e:
-            logger.error(f"Failed to process {slide_id}: {str(e)}")
+            logger.error(f"Failed to read frame {json_file.name}: {str(e)}")
 
-    logger.info(f"Pipeline Complete. Successfully processed {success_count}/{len(slide_files)} slides.")
+    # Single Global Analysis
+    if not all_detected_cells:
+        logger.error("Global Aggregation failed: No valid cell data collected.")
+        return
+
+    try:
+        report: SlideReport = aggregator.analyze_slide(slide_id, all_detected_cells)
+        
+        out_path = output_json_dir / f"{slide_id}_global_report.json"
+        aggregator.save_for_pdf(report, str(out_path))
+
+        # frame consolidation and total cell count
+        logger.info(
+            f"Pipeline Complete. Successfully consolidated {frames_successfully_read}/{len(frame_files)} "
+            f"frames into 1 global report for {slide_id} (Total Cells: {len(all_detected_cells)})."
+        )
+
+        if report.summary.risk_flag == "HIGH_RISK":
+            logger.warning(f"Slide {slide_id} identified as HIGH_RISK.")
+
+    except Exception as e:
+        logger.error(f"Global analysis failed for {slide_id}: {str(e)}")
 
 if __name__ == "__main__":
     run_batch_aggregation()
