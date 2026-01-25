@@ -6,4 +6,4 @@ src\utils\__pycache__
 data/
 weights/
 tests_temp/
-aggregation_audit.log
+*.log
