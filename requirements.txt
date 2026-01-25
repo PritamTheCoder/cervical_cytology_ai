@@ -22,3 +22,5 @@ opencv-python
 scikit-learn
 # segmentation
 cellpose==3.0.0
+# Report Generation
+fpdf2
