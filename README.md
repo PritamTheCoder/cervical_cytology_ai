@@ -1,6 +1,9 @@
 # Cervical Cytology AI — End-to-End Clinical Workflow Simulation (PoC)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)
+![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow)
 
 **A production-grade AI system simulating a real-world cervical cytology analysis workflow.**
 
