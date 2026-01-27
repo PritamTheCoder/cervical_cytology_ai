@@ -159,6 +159,30 @@ The API will be available at `http://localhost:8000`.
 
 ---
 
+## 5. Running Inference (Standalone)
+You can run the classifier on individual images or directories without the full pipeline.
+
+**Single Image:**
+```bash
+python src/infer.py --image path/to/image.png
+```
+
+**Directory Evaluation:**
+```bash
+python src/infer.py --test_dir path/to/dataset --device cuda
+```
+
+## 6. Running Full Pipeline (End-to-End)
+This script simulates the clinical workflow: it processes a directory of images as if they were a single slide, running segmentation, classification, and report generation.
+
+```bash
+python src/pipeline.py
+```
+-   **Input**: Place raw frames in `data/Test_APC/`.
+-   **Output**: Results (including PDF report) are saved to `data/reports/pdf/`.
+
+---
+
 ## 📊 Evaluation & Metrics
 
 ### Model Performance (MobileViT)
