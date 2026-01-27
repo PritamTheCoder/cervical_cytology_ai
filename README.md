@@ -87,7 +87,29 @@ Generates a JSON summary and a downloadable PDF report including:
 └── requirements.txt    # Dependencies
 ```
 
----
+### 2️⃣ Add Dataset
+Place SIPaKMeD (and others if used) into:
+data/raw/
+
+
+### 3️⃣ Train / Evaluate Model
+
+**Option A: Python Script**
+```bash
+python src/train.py
+```
+*Checkpoints will be saved to `weights/`.*
+
+**Option B: Jupyter Notebook**
+You can also train using the provided notebook:
+`notebooks/train_mobilevit_s_on_SIPKAMED.ipynb`
+
+> **Note**: The finetuned MobileViT-S model is also freely available on **HuggingFace** at -> [pretrained weights](https://huggingface.co/AurevinP/cervical-cytology-mobilevit-sipakmed).
+
+To evaluate:
+```bash
+python src/infer.py
+```
 
 ## 🚀 Getting Started
 
@@ -144,7 +166,7 @@ The API will be available at `http://localhost:8000`.
 **Device**: CUDA | **Test Samples**: 500  
 **Overall Accuracy**: **92.60%**
 
-#### Classification Report (Test Set)
+python src/main.py
 
 | Class | Precision | Recall | F1-Score | Support |
 | :--- | :--- | :--- | :--- | :--- |
@@ -173,10 +195,6 @@ The system tracks inference latency and per-class performance to ensure clinical
 
 **Dataset**:
 > Plissiti, M.E., et al. "SIPaKMeD: A new dataset for feature extraction and classification of cells in Pap smear images." *Image Analysis and Stereology*, 2018.
-
-**Tools**:
--   **Cellpose**: Stringer, C., et al. "Cellpose: a generalist algorithm for cellular segmentation." *Nature Methods*, 2021.
--   **MobileViT**: Mehta, S., & Rastegari, M. "MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer." *ICLR*, 2022.
 
 ---
 
