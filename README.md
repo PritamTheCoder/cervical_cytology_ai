@@ -117,8 +117,23 @@ data/raw/
 
 
 ### 3️⃣ Train / Evaluate Model
-python src/classification/train.py
-python src/classification/infer.py
+
+**Option A: Python Script**
+```bash
+python src/train.py
+```
+*Checkpoints will be saved to `weights/`.*
+
+**Option B: Jupyter Notebook**
+You can also train using the provided notebook:
+`notebooks/train_mobilevit_s_on_SIPKAMED.ipynb`
+
+> **Note**: The finetuned MobileViT-S model is also freely available on **HuggingFace** at -> [pretrained weights](https://huggingface.co/AurevinP/cervical-cytology-mobilevit-sipakmed).
+
+To evaluate:
+```bash
+python src/infer.py
+```
 
 
 ### 4️⃣ Run Full Pipeline
@@ -156,7 +171,7 @@ An optional API is included to demonstrate deployment potential.
 Start API:
 
 
-python api/app.py
+python src/main.py
 
 
 Endpoints:
@@ -181,17 +196,6 @@ Detailed documentation located in `/docs`:
 
 This project is for **research, learning, and demonstration**.  
 It is NOT approved for clinical use, diagnosis, or patient care.
-
----
-
-## 🏁 Status
-
-- [x] Dataset onboarding
-- [x] Classification model
-- [x] Segmentation pipeline
-- [x] Slide simulation workflow
-- [x] Metrics & reporting
-- [ ] API polish
 
 ---
 
