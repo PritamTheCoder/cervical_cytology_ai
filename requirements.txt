@@ -24,3 +24,7 @@ scikit-learn
 cellpose==3.0.0
 # Report Generation
 reportlab
+# API
+fastapi 
+uvicorn 
+python-multipart

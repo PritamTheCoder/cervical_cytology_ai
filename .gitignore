@@ -7,3 +7,6 @@ data/
 weights/
 tests_temp/
 *.log
+scripts/test_results/
+test/
+sandbox/
