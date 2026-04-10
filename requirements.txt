@@ -1,30 +1,28 @@
 # Core numerical and image libraries
-numpy
-Pillow
+numpy==1.26.4
+Pillow==10.2.0
 # YAML config
-PyYAML
+PyYAML==6.0.1
 # Deep learning
-torch
-torchvision
-timm
+torch==2.5.1
+torchvision==0.20.1
+timm==0.9.16
 # opencv
-opencv-python
+opencv-python==4.9.0.80
 # Visualization
-matplotlib
-tqdm
+matplotlib==3.8.3
+tqdm==4.66.2
 # Augmentations
-albumentations
+albumentations==1.4.1
 # Typing helpers (compat)
-typing-extensions
-# Vision
-opencv-python
+typing-extensions==4.10.0
 # ML
-scikit-learn
+scikit-learn==1.4.1.post1
 # segmentation
 cellpose==3.0.0
 # Report Generation
-reportlab
+reportlab==4.1.0
 # API
-fastapi 
-uvicorn 
-python-multipart
+fastapi==0.115.6
+uvicorn==0.29.0
+python-multipart==0.0.9

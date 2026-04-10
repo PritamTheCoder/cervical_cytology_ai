@@ -23,6 +23,65 @@ class ClinicalAggregator:
         Initialize with the centralized ReportConfig.
         """
         self.config = config
+
+    def _format_ai_result(self, risk_flag: str) -> str:
+        return self.config.AI_RESULT_LABELS.get(risk_flag, f"AI Screening Result: {risk_flag}")
+
+    def _format_recommendation(self, risk_flag: str) -> str:
+        return self.config.RISK_RECOMMENDATIONS.get(
+            risk_flag,
+            "Expert cytology review is recommended before any clinical decision."
+        )
+
+    def _build_specimen_adequacy_note(self, total_cells: int, cellularity: str) -> str:
+        if cellularity == "ADEQUATE":
+            return (
+                f"Cellularity is ADEQUATE because {total_cells} analyzable epithelial-cell candidates were detected "
+                "(>=50 threshold for stable AI screening behavior)."
+            )
+        if cellularity == "MARGINAL":
+            return (
+                f"Cellularity is MARGINAL because only {total_cells} analyzable epithelial-cell candidates were detected "
+                "(<50). Interpret results with caution and correlate clinically."
+            )
+        return "Cellularity is INSUFFICIENT for reliable AI screening interpretation."
+
+    def _build_clinical_interpretation(
+        self,
+        class_counts: Counter,
+        abnormal_count: int,
+        abnormal_ratio: float,
+        total_valid: int
+    ) -> str:
+        parts = [
+            (
+                "AI-assisted interpretation: "
+                f"abnormal-appearing cells represent {abnormal_ratio:.1%} "
+                f"({abnormal_count}/{total_valid}) of analyzed cells."
+            )
+        ]
+
+        koilo_count = class_counts.get("im_Koilocytotic", 0)
+        dysk_count = class_counts.get("im_Dyskeratotic", 0)
+
+        if koilo_count > 0:
+            parts.append(
+                f"Koilocytotic candidates detected: {koilo_count}. "
+                f"{self.config.CLASS_INTERPRETATION.get('im_Koilocytotic', '')}"
+            )
+
+        if dysk_count > 0:
+            parts.append(
+                f"Dyskeratotic candidates detected: {dysk_count}. "
+                f"{self.config.CLASS_INTERPRETATION.get('im_Dyskeratotic', '')}"
+            )
+
+        parts.append(
+            "These are AI suggestions for triage support and are not a definitive diagnosis; "
+            "expert cytology/pathology confirmation is mandatory."
+        )
+
+        return " ".join(parts)
         
     def _get_adaptive_thresholds(self, total_cells: int):
         """
@@ -65,7 +124,8 @@ class ClinicalAggregator:
             if group == "ABNORMAL" and confidence < self.config.AGGREGATION_CONFIDENCE_THRESHOLD:
                 logger.warning(f"Downgrading low-conf abnormal cell {p.get('cell_id')} ({confidence:.2f})")
                 group = "BENIGN_UNCERTAIN" # Re-bucket for internal logic
-            
+                pred_class = "im_Uncertain_Low_Conf" # Avoid contradiction in final report tables
+
             valid_cells.append({
                 "class": pred_class, 
                 "group": group, 
@@ -100,19 +160,44 @@ class ClinicalAggregator:
         thresh = self._get_adaptive_thresholds(total_valid)
         
         risk_flag = "NORMAL"
-        primary_finding = "No significant abnormalities detected."
+        primary_finding = "AI screening did not identify a significant burden of abnormal-appearing cells."
 
         # Logic comparison using CONFIG values where applicable
         if abnormal_count >= thresh['min_count']:
             if abnormal_ratio >= self.config.HIGH_RISK_RATIO:
                 risk_flag = "HIGH_RISK"
-                primary_finding = f"High burden of abnormal cells ({abnormal_ratio:.1%})."
+                primary_finding = (
+                    f"AI suggests a high proportion of abnormal-appearing cells ({abnormal_ratio:.1%}). "
+                    "Suspicious for high-grade abnormality (AI suggestion); expert review is required."
+                )
             elif abnormal_ratio >= thresh['min_ratio']:
                 risk_flag = "ELEVATED_RISK"
-                primary_finding = f"Abnormal cells detected above threshold ({abnormal_count} cells)."
+                primary_finding = (
+                    f"AI detected abnormal-appearing cells above the screening threshold ({abnormal_count} cells). "
+                    "Clinical significance should be determined by expert review."
+                )
             else:
                 risk_flag = "NORMAL"
-                primary_finding = f"Isolated abnormal cells detected (likely noise)."
+                primary_finding = (
+                    "AI detected isolated abnormal-appearing cells at low burden; "
+                    "significance is uncertain and requires expert correlation."
+                )
+
+        cellularity = "ADEQUATE" if total_valid >= 50 else "MARGINAL"
+        low_confidence_count = group_counts.get("BENIGN_UNCERTAIN", 0)
+        now = datetime.now()
+        timestamp = now.isoformat()
+
+        ai_screening_result = self._format_ai_result(risk_flag)
+        recommendation = self._format_recommendation(risk_flag)
+        adequacy_note = self._build_specimen_adequacy_note(total_valid, cellularity)
+        clinical_interpretation = self._build_clinical_interpretation(
+            class_counts,
+            abnormal_count,
+            abnormal_ratio,
+            total_valid
+        )
+        report_id = f"{self.config.REPORT_ID_PREFIX}-{slide_id}-{now.strftime('%Y%m%d%H%M%S')}"
 
         # --- 4. Rank Evidence (Optimization for PDF) ---
         # Sort abnormal cells by confidence (descending)
@@ -124,36 +209,94 @@ class ClinicalAggregator:
         # --- 5. Construct Report ---
         summary = ClinicalSummary(
             slide_id=slide_id,
-            timestamp=datetime.now().isoformat(),
+            timestamp=timestamp,
             risk_flag=risk_flag,
             primary_finding=primary_finding,
-            cellularity="ADEQUATE" if total_valid >= 50 else "MARGINAL",
+            cellularity=cellularity,
             abnormal_ratio=round(abnormal_ratio, 4),
-            logic_mode=thresh['mode']
+            logic_mode=thresh['mode'],
+            total_cells=total_valid,
+            abnormal_cells=abnormal_count,
+            low_confidence_cells=low_confidence_count,
+            ai_screening_result=ai_screening_result,
+            recommendation=recommendation,
+            specimen_adequacy_note=adequacy_note,
+            clinical_interpretation=clinical_interpretation,
+            report_id=report_id
         )
 
         return SlideReport(
             summary=summary,
             class_counts=dict(class_counts),
             clinical_group_counts=dict(group_counts),
-            top_abnormal_cells=top_evidence
+            top_abnormal_cells=top_evidence,
+            model_info={
+                "model_name": self.config.MODEL_NAME_DISPLAY,
+                "model_type": self.config.MODEL_TYPE,
+                "model_version": self.config.MODEL_VERSION,
+                "training_dataset": self.config.TRAINING_DATASET,
+                "accuracy": self.config.METRIC_ACCURACY,
+                "precision": self.config.METRIC_PRECISION,
+                "recall": self.config.METRIC_RECALL,
+                "f1": self.config.METRIC_F1,
+                "aggregation_confidence_threshold": self.config.AGGREGATION_CONFIDENCE_THRESHOLD,
+            },
+            limitations=list(self.config.LIMITATIONS_DEFAULT),
+            display_labels={
+                "risk_display": ai_screening_result,
+                "uncertain_class_label": "Low Confidence Predictions",
+                "abnormal_hint": "Suspicious for High-Grade Abnormality (AI Suggestion)",
+            },
+            schema_version=self.config.REPORT_SCHEMA_VERSION,
         )
 
     def _empty_report(self, slide_id):
         """Fail-safe for empty slides."""
+        now = datetime.now()
+        timestamp = now.isoformat()
+        report_id = f"{self.config.REPORT_ID_PREFIX}-{slide_id}-{now.strftime('%Y%m%d%H%M%S')}"
+        risk_flag = "INDETERMINATE"
         return SlideReport(
             summary=ClinicalSummary(
-                slide_id, 
-                datetime.now().isoformat(), 
-                "INDETERMINATE", 
-                "No Cells", 
-                "INSUFFICIENT", 
-                0.0, 
-                "N/A"
+                slide_id=slide_id,
+                timestamp=timestamp,
+                risk_flag=risk_flag,
+                primary_finding="AI screening could not be completed because no analyzable cells were detected.",
+                cellularity="INSUFFICIENT",
+                abnormal_ratio=0.0,
+                logic_mode="N/A",
+                total_cells=0,
+                abnormal_cells=0,
+                low_confidence_cells=0,
+                ai_screening_result=self._format_ai_result(risk_flag),
+                recommendation=self._format_recommendation(risk_flag),
+                specimen_adequacy_note=self._build_specimen_adequacy_note(0, "INSUFFICIENT"),
+                clinical_interpretation=(
+                    "AI-assisted interpretation is not available due to insufficient analyzable cells. "
+                    "Repeat sampling or expert review is recommended."
+                ),
+                report_id=report_id,
             ),
-            class_counts={}, 
-            clinical_group_counts={}, 
-            top_abnormal_cells=[]
+            class_counts={},
+            clinical_group_counts={},
+            top_abnormal_cells=[],
+            model_info={
+                "model_name": self.config.MODEL_NAME_DISPLAY,
+                "model_type": self.config.MODEL_TYPE,
+                "model_version": self.config.MODEL_VERSION,
+                "training_dataset": self.config.TRAINING_DATASET,
+                "accuracy": self.config.METRIC_ACCURACY,
+                "precision": self.config.METRIC_PRECISION,
+                "recall": self.config.METRIC_RECALL,
+                "f1": self.config.METRIC_F1,
+                "aggregation_confidence_threshold": self.config.AGGREGATION_CONFIDENCE_THRESHOLD,
+            },
+            limitations=list(self.config.LIMITATIONS_DEFAULT),
+            display_labels={
+                "risk_display": self._format_ai_result(risk_flag),
+                "uncertain_class_label": "Low Confidence Predictions",
+            },
+            schema_version=self.config.REPORT_SCHEMA_VERSION,
         )
 
     def save_for_pdf(self, report: SlideReport, filepath: str):
