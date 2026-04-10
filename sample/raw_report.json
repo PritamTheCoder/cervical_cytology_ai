@@ -1,0 +1,170 @@
+{
+  "summary": {
+    "slide_id": "raw",
+    "timestamp": "2026-04-10T12:45:22.247916",
+    "risk_flag": "HIGH_RISK",
+    "primary_finding": "High burden of abnormal cells (34.9%).",
+    "cellularity": "ADEQUATE",
+    "abnormal_ratio": 0.3494,
+    "logic_mode": "Noise Supression (WSI)"
+  },
+  "class_counts": {
+    "im_Uncertain_Low_Conf": 386,
+    "im_Koilocytotic": 523,
+    "im_Parabasal": 214,
+    "im_Metaplastic": 157,
+    "im_Superficial_Intermediate": 230,
+    "im_Dyskeratotic": 7
+  },
+  "clinical_group_counts": {
+    "BENIGN_UNCERTAIN": 386,
+    "ABNORMAL": 530,
+    "BENIGN": 601
+  },
+  "top_abnormal_cells": [
+    {
+      "cell_id": 13,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9892,
+      "bbox": [
+        1242,
+        677,
+        1437,
+        869
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 10,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9886,
+      "bbox": [
+        1303,
+        225,
+        1629,
+        584
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 48,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9859,
+      "bbox": [
+        0,
+        552,
+        142,
+        714
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 30,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9856,
+      "bbox": [
+        836,
+        325,
+        1080,
+        618
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 65,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9854,
+      "bbox": [
+        1057,
+        798,
+        1200,
+        979
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 94,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9849,
+      "bbox": [
+        455,
+        1278,
+        626,
+        1468
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 52,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9841,
+      "bbox": [
+        935,
+        861,
+        1082,
+        1042
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 73,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9839,
+      "bbox": [
+        450,
+        924,
+        583,
+        1062
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 36,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.982,
+      "bbox": [
+        1629,
+        1026,
+        1901,
+        1197
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 17,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9815,
+      "bbox": [
+        961,
+        747,
+        1222,
+        1054
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 76,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9813,
+      "bbox": [
+        802,
+        974,
+        950,
+        1121
+      ],
+      "heatmap_path": null
+    },
+    {
+      "cell_id": 60,
+      "cell_class": "im_Koilocytotic",
+      "confidence": 0.9812,
+      "bbox": [
+        952,
+        701,
+        1165,
+        929
+      ],
+      "heatmap_path": null
+    }
+  ]
+}
