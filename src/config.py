@@ -1,8 +1,7 @@
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Tuple, Dict
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 # --- Phase 1: Data & Contracts ---
 @dataclass
@@ -49,7 +48,7 @@ class Phase2Config(Phase1Config):
     model_name: str = "mobilevit_s"
     pretrained: bool = True
     
-    # Phase 2 Specific Paths
+    # Specific Paths
     output_dir: Path = Path("./outputs/phase2_classification")
     weights_path: Path = Path("./weights/mobilevit_s_sipakmed_stain_normalized.pth")
     
@@ -65,7 +64,6 @@ class Phase2Config(Phase1Config):
     device: str = "cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu"
 
     def __post_init__(self):
-        # Phase 2 specific directories
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.weights_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -73,12 +71,12 @@ class Phase2Config(Phase1Config):
 @dataclass
 class SegmentationConfig:
     # Paths
-    INPUT_DIR: Path = Path("data/Test_APC")
+    INPUT_DIR: Path = Path("data/raw")
     OUTPUT_DIR: Path = Path("data/segmented")
     
     # Cellpose Settings
     MODEL_TYPE: str = "cyto2"
-    DIAMETER: int = 150     # approximate diameter of cells in pixels (Needs Tuning) 
+    DIAMETER: int = 150     # approximate diameter of cells in pixels 
     FLOW_THRESHOLD: float = 0.6     # Strictness of shape ( lower = more strict)
     CELLPROB_THRESHOLD: float = -2.0         # Threshold for cell probability
     
@@ -121,7 +119,7 @@ class CellEvidence:
 
 @dataclass
 class ClinicalSummary:
-    """Hight-level diagnosis summary."""
+    """High-level AI screening summary for report generation."""
     slide_id: str
     timestamp: str
     risk_flag: str 
@@ -129,6 +127,16 @@ class ClinicalSummary:
     cellularity: str
     abnormal_ratio: float
     logic_mode: str
+
+    # Optional display-safe fields for richer clinical reporting.
+    total_cells: Optional[int] = None
+    abnormal_cells: Optional[int] = None
+    low_confidence_cells: Optional[int] = None
+    ai_screening_result: Optional[str] = None
+    recommendation: Optional[str] = None
+    specimen_adequacy_note: Optional[str] = None
+    clinical_interpretation: Optional[str] = None
+    report_id: Optional[str] = None
     
 @dataclass
 class SlideReport:
@@ -141,6 +149,12 @@ class SlideReport:
     
     # The 'Evidence' - Top N abnormal cells for visual grid
     top_abnormal_cells: list[CellEvidence] = field(default_factory=list)
+
+    # Backward-compatible optional extension fields.
+    model_info: Dict[str, Any] = field(default_factory=dict)
+    limitations: List[str] = field(default_factory=list)
+    display_labels: Dict[str, str] = field(default_factory=dict)
+    schema_version: str = "2.0"
 
 
 # --- Phase 6 CONFIGURATION ---
@@ -178,6 +192,48 @@ class ReportConfig:
     # --- PDF Visuals ---
     REPORT_TITLE: str = "AI-Assisted Cervical Cancer Cytology Analysis Report"
     INSTITUTION_NAME: str = "Cytology-AI Lab"
+    REPORT_SCHEMA_VERSION: str = "2.0"
+    REPORT_ID_PREFIX: str = "CCR"
+
+    # --- Model transparency defaults (sourced from project README) ---
+    MODEL_NAME_DISPLAY: str = "MobileViT-S (CNN-Transformer Hybrid)"
+    MODEL_TYPE: str = "MobileViT-S"
+    MODEL_VERSION: str = "mobilevit_s_sipakmed_stain_normalized"
+    TRAINING_DATASET: str = "SIPaKMeD"
+    METRIC_ACCURACY: float = 0.926
+    METRIC_PRECISION: float = 0.93
+    METRIC_RECALL: float = 0.93
+    METRIC_F1: float = 0.93
+
+    # --- Display-safe labels ---
+    AI_RESULT_LABELS: Dict[str, str] = field(default_factory=lambda: {
+        "HIGH_RISK": "AI Screening Result: High Risk (Requires Expert Review)",
+        "ELEVATED_RISK": "AI Screening Result: Elevated Risk (Expert Review Recommended)",
+        "NORMAL": "AI Screening Result: No Significant Abnormality Detected (AI Screening)",
+        "INDETERMINATE": "AI Screening Result: Indeterminate (Insufficient Data for AI Screening)"
+    })
+
+    RISK_RECOMMENDATIONS: Dict[str, str] = field(default_factory=lambda: {
+        "HIGH_RISK": "Urgent expert review by a cytotechnologist/pathologist is recommended.",
+        "ELEVATED_RISK": "Expert review is recommended to determine clinical significance.",
+        "NORMAL": "Routine expert-overread is recommended per institutional policy.",
+        "INDETERMINATE": "Repeat sampling or additional review is recommended due to insufficient analyzable data."
+    })
+
+    CLASS_INTERPRETATION: Dict[str, str] = field(default_factory=lambda: {
+        "im_Koilocytotic": "Koilocytotic morphology may reflect HPV-related cytopathic change and can be suggestive of LSIL in the proper clinical context.",
+        "im_Dyskeratotic": "Dyskeratotic morphology may be suspicious for higher-grade squamous abnormality and can be suggestive of HSIL risk.",
+        "im_Metaplastic": "Metaplastic cells are commonly benign/reactive in cytology specimens.",
+        "im_Parabasal": "Parabasal cells are often seen in benign/reactive settings and should be interpreted with specimen context.",
+        "im_Superficial_Intermediate": "Superficial/intermediate squamous cells are typically benign components in cervical cytology."
+    })
+
+    LIMITATIONS_DEFAULT: List[str] = field(default_factory=lambda: [
+        "Model performance is bounded by training data composition and may not generalize to all laboratory protocols.",
+        "False positives and false negatives are possible; model confidence is not equivalent to diagnostic certainty.",
+        "Staining variability, preparation artifacts, and overlap/debris can affect detection and classification quality.",
+        "Low-cellularity or poor-quality samples may reduce reliability and should be interpreted with caution."
+    ])
     
     # Evidence Gallery
     MAX_EVIDENCE_CELLS: int = 12
