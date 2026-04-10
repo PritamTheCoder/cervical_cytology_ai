@@ -154,7 +154,7 @@ class SlideReport:
     model_info: Dict[str, Any] = field(default_factory=dict)
     limitations: List[str] = field(default_factory=list)
     display_labels: Dict[str, str] = field(default_factory=dict)
-    schema_version: str = "2.0"
+    schema_version: str = "2.1.0"
 
 
 # --- Phase 6 CONFIGURATION ---
@@ -192,7 +192,7 @@ class ReportConfig:
     # --- PDF Visuals ---
     REPORT_TITLE: str = "AI-Assisted Cervical Cancer Cytology Analysis Report"
     INSTITUTION_NAME: str = "Cytology-AI Lab"
-    REPORT_SCHEMA_VERSION: str = "2.0"
+    REPORT_SCHEMA_VERSION: str = "2.1.0"
     REPORT_ID_PREFIX: str = "CCR"
 
     # --- Model transparency defaults (sourced from project README) ---
